@@ -1,0 +1,13 @@
+#enemys count at initialization
+initTankCount=10
+tankSpeed=10
+bulletSpeed=30
+gameWidth=1080
+gameHeight=720
+mainTank_x=200
+mainTank_y=200
+#colliders
+colliders0=com.yaoshuai.tank.tank7_2_work.cor.BulletTankCollider
+colliders1=com.yaoshuai.tank.tank7_2_work.cor.TankTankCollider
+colliders2=com.yaoshuai.tank.tank7_2_work.cor.TankWallCollider
+colliders3=com.yaoshuai.tank.tank7_2_work.cor.BulletWallCollider
