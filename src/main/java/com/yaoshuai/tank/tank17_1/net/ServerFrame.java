@@ -26,13 +26,6 @@ public class ServerFrame extends Frame {
                 System.exit(0);
             }
         });
-        /*this.btnStart.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                server.serverStart();
-            }
-        });*/
-//        this.btnStart.addActionListener((e)->server.serverStart());
     }
 
     public static void main(String[] args) {

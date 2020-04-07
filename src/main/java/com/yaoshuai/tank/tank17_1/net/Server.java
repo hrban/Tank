@@ -7,7 +7,6 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
 public class Server {
@@ -27,10 +26,9 @@ public class Server {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch){
-//                            System.out.println(ch);
                             ChannelPipeline pipeline = ch.pipeline();
-                            pipeline.addLast(new TankJoinMsgDecoder())
-                                    .addLast(new TankJoinMsgEncoder())
+                            pipeline.addLast(new MsgDecoder())
+                                    .addLast(new MsgEncoder())
                                     .addLast(new ServerChildHandler());
 
                         }
@@ -63,18 +61,8 @@ class ServerChildHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
 
-        System.out.println("转发");
-            Server.clients.writeAndFlush(msg);
-
-        /*System.out.println("channel read");
-        try {
-            TankJoinMsg tankMsg = (TankJoinMsg) msg;
-            ServerFrame.INSTANCE.updateServerMsg(tankMsg.toString());
-        }finally {
-            //释放
-            ReferenceCountUtil.release(msg);
-        }*/
-
+        ServerFrame.INSTANCE.updateClientMsg(msg.toString());
+        Server.clients.writeAndFlush(msg);
 
     }
 

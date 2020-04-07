@@ -9,21 +9,9 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 import java.util.List;
 import java.util.UUID;
 
-public class TankJoinMsgDecoder extends ByteToMessageDecoder {
+public class MsgDecoder extends ByteToMessageDecoder {
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out){
-//        //需要计算TankJoinMsg字节 -----吐了
-//        if(in.readableBytes() < 33) return;//Tcp拆包和粘包的问题
-//
-//        TankJoinMsg msg = new TankJoinMsg();
-//        msg.x = in.readInt();
-//        msg.y = in.readInt();
-//        msg.dir = Dir.values()[in.readInt()];
-//        msg.moving = in.readBoolean();
-//        msg.group = Group.values()[in.readInt()];
-//        msg.id = new UUID(in.readLong(),in.readLong());
-//
-//        out.add(msg);
+    protected void decode(ChannelHandlerContext  ctx, ByteBuf in, List<Object> out){
         //消息头：消息类型+长度是8个字节 收到以后才可以解析消息
         if(in.readableBytes() < 8) return;
         //标记读指针
@@ -42,13 +30,24 @@ public class TankJoinMsgDecoder extends ByteToMessageDecoder {
         byte[] bytes = new byte[length];
         in.readBytes(bytes);
 
+        Msg msg = null;
+
+        //reflection 加新消息不变
+        //Class.forName(msgType.toString + "Msg").constructor().newInstance()
         switch(msgType){
             case TankJoinMsg:
-                TankJoinMsg msg = new TankJoinMsg();
-                msg.parse(bytes);
-                out.add(msg);
+                msg = new TankJoinMsg();
+                break;
+            case TankStartMoving:
+                msg = new TankStartMovingMsg();
+                break;
+            case TankStop:
+                msg = new TankStopMsg();
+                break;
             default:
                 break;
         }
+        msg.parse(bytes);
+        out.add(msg);
     }
 }

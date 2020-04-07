@@ -1,5 +1,9 @@
 package com.yaoshuai.tank.tank17_1.tank;
 
+import com.yaoshuai.tank.tank17_1.net.Client;
+import com.yaoshuai.tank.tank17_1.net.TankStartMovingMsg;
+import com.yaoshuai.tank.tank17_1.net.TankStopMsg;
+
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -47,6 +51,7 @@ public class TankFrame extends Frame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                Client.INSTANCE.closeConnect();
                 System.exit(0);
             }
         });
@@ -172,17 +177,26 @@ public class TankFrame extends Frame {
         }
 
         private void setMainTankDir() {
-            //使坦克变为移动状态
-            myTank.setMoving(true);
-
-            //根据键盘操作改变坦克移动方向
-            if (bL) myTank.setDir(Dir.LEFT);
-            if (bU) myTank.setDir(Dir.UP)  ;
-            if (bD) myTank.setDir(Dir.DOWN) ;
-            if (bR) myTank.setDir(Dir.RIGHT)  ;
-
             //如果不按方向键则保持静止
-            if(!bL && !bR && !bD && !bU) myTank.setMoving(false);
+            if(!bL && !bR && !bD && !bU) {
+                myTank.setMoving(false);
+                Client.INSTANCE.send(new TankStopMsg(getMainTank()));
+            }
+
+            //使坦克变为移动状态
+            else {
+                myTank.setMoving(true);
+
+                //根据键盘操作改变坦克移动方向
+                if (bL) myTank.setDir(Dir.LEFT);
+                if (bU) myTank.setDir(Dir.UP);
+                if (bD) myTank.setDir(Dir.DOWN);
+                if (bR) myTank.setDir(Dir.RIGHT);
+
+
+                //发出坦克移动的消息
+                Client.INSTANCE.send(new TankStartMovingMsg(getMainTank()));
+            }
         }
     }
     public Tank getMainTank(){

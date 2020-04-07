@@ -103,19 +103,6 @@ public class TankJoinMsg extends Msg{
         }
     }
 
-
-    @Override
-    public String toString() {
-        return "TankJoinMsg{" +
-                "x=" + x +
-                ", y=" + y +
-                ", dir=" + dir +
-                ", moving=" + moving +
-                ", group=" + group +
-                ", id=" + id +
-                '}';
-    }
-
     @Override
     public void handle() {
         if(this.id.equals(TankFrame.INSTANCE.getMainTank().getId())||
