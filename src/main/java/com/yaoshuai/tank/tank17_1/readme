@@ -1,0 +1,12 @@
+基于tank4_1版本 开启netty坦克
+
+1、注释初始化敌方坦克
+
+注意：写完Codec, 一定要写单元测试
+
+坦克头上加UUID
+坦克类加UUID属性 要不Client传Server如果UUID为null的话传不过去
+坦克位置随机
+
+接收到TankJoinMsg的逻辑处理
+    先判断是不是自己 再判断列表有没有 接收到以后发一个自己的TankJoinMsg
