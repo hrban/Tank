@@ -1,6 +1,11 @@
 package com.yaoshuai.tank.tank17_1.tank;
 
+import com.yaoshuai.tank.tank17_1.net.BulletNewMsg;
+import com.yaoshuai.tank.tank17_1.net.Client;
+import com.yaoshuai.tank.tank17_1.net.TankDieMsg;
+
 import java.awt.*;
+import java.util.UUID;
 
 public class Bullet {
 
@@ -9,6 +14,9 @@ public class Bullet {
     public static final int HEIGHT = ResourceMgr.bulletD.getHeight();
     private Dir dir;
     private int x,y;
+    private UUID id = UUID.randomUUID();
+    private UUID playerID = UUID.randomUUID();
+
 
     Rectangle rectangle = new Rectangle();
 
@@ -22,7 +30,8 @@ public class Bullet {
 
     }
 
-    public Bullet(int x, int y, Dir dir, Group group, TankFrame tankFrame) {
+    public Bullet(UUID playerID,int x, int y, Dir dir, Group group, TankFrame tankFrame) {
+        this.playerID = playerID;
         this.dir = dir;
         this.x = x;
         this.y = y;
@@ -33,6 +42,43 @@ public class Bullet {
         rectangle.y = this.y;
         rectangle.width = WIDTH;
         rectangle.height = HEIGHT;
+    }
+
+    public Bullet(BulletNewMsg msg){
+        this.x = msg.x;
+        this.y = msg.y;
+        this.dir = msg.dir;
+        this.group = msg.group;
+        this.id = msg.id;
+
+        rectangle.x = this.x;
+        rectangle.y = this.y;
+        rectangle.width = WIDTH;
+        rectangle.height = HEIGHT;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public Dir getDir() {
+        return dir;
+    }
+
+    public void setDir(Dir dir) {
+        this.dir = dir;
     }
 
     public boolean isLive() {
@@ -49,6 +95,22 @@ public class Bullet {
 
     public void setGroup(Group group) {
         this.group = group;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public UUID getPlayerID() {
+        return playerID;
+    }
+
+    public void setPlayerID(UUID playerID) {
+        this.playerID = playerID;
     }
 
     public void paint(Graphics g){
@@ -103,22 +165,19 @@ public class Bullet {
         rectangle.y = this.y;
     }
     public void collideWith(Tank tank){
-        if(this.group == tank.getGroup()) return;
+        if(this.playerID.equals(tank.getId())) return;
 
         //TODO:用一个rect来记录子弹的位置
         //已修复一直创建rectangle的bug
 
-        if(rectangle.intersects(tank.rectangle)){
+        if(this.live && tank.isLive() && rectangle.intersects(tank.rectangle)){
             tank.die();
             this.die();
-            //出现爆炸
-            int ex = tank.getX() + Tank.WIDTH/2 - Explosion.WIDTH/2;
-            int ey = tank.getY() + Tank.HEIGHT/2 - Explosion.HEIGHT/2 ;
-            tankFrame.explosions.add(new Explosion(ex,ey,tankFrame));
+            Client.INSTANCE.send(new TankDieMsg(this.id,tank.getId()));
         }
     }
 
-    private void die() {
+    public void die() {
         this.live = false;
     }
 }

@@ -70,6 +70,8 @@ class ClientHandler extends SimpleChannelInboundHandler<Msg>{
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Msg msg){
 
+        System.out.println("客户端收到消息："+msg.toString());
+        ServerFrame.INSTANCE.updateServerMsg("客户端收到消息："+msg.toString());
         msg.handle();
     }
 

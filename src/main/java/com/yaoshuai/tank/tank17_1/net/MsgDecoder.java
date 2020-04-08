@@ -6,12 +6,13 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.UUID;
 
 public class MsgDecoder extends ByteToMessageDecoder {
     @Override
-    protected void decode(ChannelHandlerContext  ctx, ByteBuf in, List<Object> out){
+    protected void decode(ChannelHandlerContext  ctx, ByteBuf in, List<Object> out) throws Exception {
         //消息头：消息类型+长度是8个字节 收到以后才可以解析消息
         if(in.readableBytes() < 8) return;
         //标记读指针
@@ -30,12 +31,11 @@ public class MsgDecoder extends ByteToMessageDecoder {
         byte[] bytes = new byte[length];
         in.readBytes(bytes);
 
-        Msg msg = null;
-
         //reflection 加新消息不变
         //Class.forName(msgType.toString + "Msg").constructor().newInstance()
-        switch(msgType){
-            case TankJoinMsg:
+        Msg msg = (Msg)Class.forName("com.yaoshuai.tank.tank17_1.net."+msgType.toString()+"Msg").getDeclaredConstructor().newInstance();
+        /*switch(msgType){
+            case TankJoin:
                 msg = new TankJoinMsg();
                 break;
             case TankStartMoving:
@@ -44,9 +44,14 @@ public class MsgDecoder extends ByteToMessageDecoder {
             case TankStop:
                 msg = new TankStopMsg();
                 break;
+            case TankDie:
+                msg = new TankDieMsg();
+                break;
+            case BulletNew:
+                msg = new BulletNewMsg();
             default:
                 break;
-        }
+        }*/
         msg.parse(bytes);
         out.add(msg);
     }

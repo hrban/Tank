@@ -1,5 +1,7 @@
 package com.yaoshuai.tank.tank17_1.tank;
 
+import com.yaoshuai.tank.tank17_1.net.BulletNewMsg;
+import com.yaoshuai.tank.tank17_1.net.Client;
 import com.yaoshuai.tank.tank17_1.net.TankJoinMsg;
 
 import java.awt.*;
@@ -114,12 +116,22 @@ public class Tank {
     }
 
     public void paint(Graphics g) {
-        if(!live) tankFrame.tanks.remove(this);
+//        if(!live) tankFrame.tanks.remove(this);
         //uuid on head
         Color c = g.getColor();
         g.setColor(Color.YELLOW);
         g.drawString(id.toString(),this.x,this.y-10);
         g.setColor(c);
+
+        //draw a rect if dead
+        if(!live){
+            moving = false;
+            Color cc = g.getColor();
+            g.setColor(Color.WHITE);
+            g.fillRect(x,y,WIDTH,HEIGHT);
+            g.setColor(cc);
+            return;
+        }
 
         switch (dir){
             case LEFT:
@@ -142,6 +154,7 @@ public class Tank {
 
     }
     private void move(){
+        if(!live) return;
         if (!moving) return;
         switch (dir) {
             case UP:
@@ -186,10 +199,16 @@ public class Tank {
     public void fire() {
         int bx = this.x + Tank.WIDTH/2 - Bullet.WIDTH/2;
         int by = this.y + Tank.HEIGHT/2 - Bullet.HEIGHT/2 ;
-        tankFrame.bullets.add(new Bullet(bx,by,this.dir,this.group,tankFrame));
+        Bullet bullet = new Bullet(this.id,bx,by,this.dir,this.group,tankFrame);
+        tankFrame.bullets.add(bullet);
+        Client.INSTANCE.send(new BulletNewMsg(bullet));
     }
 
     public void die() {
         this.live = false;
+        //出现爆炸
+        int ex = this.getX() + Tank.WIDTH/2 - Explosion.WIDTH/2;
+        int ey = this.getY() + Tank.HEIGHT/2 - Explosion.HEIGHT/2 ;
+        TankFrame.INSTANCE.explosions.add(new Explosion(ex,ey));
     }
 }

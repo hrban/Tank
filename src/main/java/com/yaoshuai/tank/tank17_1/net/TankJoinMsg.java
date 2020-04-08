@@ -79,7 +79,7 @@ public class TankJoinMsg extends Msg{
 
     @Override
     public MsgType getMsgType() {
-        return MsgType.TankJoinMsg;
+        return MsgType.TankJoin;
     }
 
     @Override
@@ -106,10 +106,22 @@ public class TankJoinMsg extends Msg{
     @Override
     public void handle() {
         if(this.id.equals(TankFrame.INSTANCE.getMainTank().getId())||
-                TankFrame.INSTANCE.findByUUID(this.id) != null) return;
-        System.out.println(this);
+                TankFrame.INSTANCE.findTankByUUID(this.id) != null) return;
+//        System.out.println(this);
         Tank tank = new Tank(this);
         TankFrame.INSTANCE.addTank(tank);
         Client.INSTANCE.send(new TankJoinMsg(TankFrame.INSTANCE.getMainTank()));
+    }
+
+    @Override
+    public String toString() {
+        return "TankJoinMsg{" +
+                "坦克id=" + id +
+                "|| x=" + x +
+                "|| y=" + y +
+                "|| dir=" + dir +
+                "|| moving=" + moving +
+                "|| group=" + group +
+                '}';
     }
 }

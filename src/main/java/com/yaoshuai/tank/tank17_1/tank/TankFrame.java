@@ -1,5 +1,6 @@
 package com.yaoshuai.tank.tank17_1.tank;
 
+import com.yaoshuai.tank.tank17_1.net.BulletNewMsg;
 import com.yaoshuai.tank.tank17_1.net.Client;
 import com.yaoshuai.tank.tank17_1.net.TankStartMovingMsg;
 import com.yaoshuai.tank.tank17_1.net.TankStopMsg;
@@ -57,8 +58,17 @@ public class TankFrame extends Frame {
         });
 
     }
-    public Tank findByUUID(UUID id){
+    public Tank findTankByUUID(UUID id){
         return tanks.get(id);
+    }
+
+    public Bullet findBulletByUUID(UUID id){
+        for(Bullet b:bullets){
+            if(b.getId().equals(id)){
+                return b;
+            }
+        }
+        return null;
     }
     //双缓冲解决闪烁
     Image offScreenImage = null;
@@ -106,16 +116,21 @@ public class TankFrame extends Frame {
         for(int i = 0;i < explosions.size();i++){
             explosions.get(i).paint(g);
         }
-        //子弹和坦克碰撞检测
-        for(int i = 0;i < bullets.size();i++){
-            for(int j = 0;j < tanks.size();j++){
-                bullets.get(i).collideWith(tanks.get(j));
+        //子弹和坦克碰撞检测 超大一个坑
+        Collection<Tank> values = tanks.values();
+        for(Bullet b:bullets){
+            for(Tank t:values){
+                b.collideWith(t);
             }
         }
     }
 
     public void addTank(Tank tank) {
         tanks.put(tank.getId(),tank);
+    }
+
+    public void addBullet(Bullet bullet){
+        bullets.add(bullet);
     }
 
     class MyKeyListener extends KeyAdapter {
@@ -141,7 +156,7 @@ public class TankFrame extends Frame {
                 case (KeyEvent.VK_D):
                     bR = true;
                     break;
-                case (KeyEvent.VK_SPACE):
+//                case (KeyEvent.VK_SPACE):
 
 //                    bS = true;
                 default:
@@ -185,8 +200,6 @@ public class TankFrame extends Frame {
 
             //使坦克变为移动状态
             else {
-                myTank.setMoving(true);
-
                 //根据键盘操作改变坦克移动方向
                 if (bL) myTank.setDir(Dir.LEFT);
                 if (bU) myTank.setDir(Dir.UP);
@@ -196,6 +209,7 @@ public class TankFrame extends Frame {
 
                 //发出坦克移动的消息
                 Client.INSTANCE.send(new TankStartMovingMsg(getMainTank()));
+                myTank.setMoving(true);
             }
         }
     }

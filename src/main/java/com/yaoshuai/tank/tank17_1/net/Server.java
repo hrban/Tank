@@ -61,7 +61,7 @@ class ServerChildHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
 
-        ServerFrame.INSTANCE.updateClientMsg(msg.toString());
+        ServerFrame.INSTANCE.updateClientMsg("服务端收到消息："+msg.toString());
         Server.clients.writeAndFlush(msg);
 
     }

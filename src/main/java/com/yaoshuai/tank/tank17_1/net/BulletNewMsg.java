@@ -1,62 +1,68 @@
 package com.yaoshuai.tank.tank17_1.net;
 
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
-import com.yaoshuai.tank.tank17_1.tank.Dir;
-import com.yaoshuai.tank.tank17_1.tank.Tank;
-import com.yaoshuai.tank.tank17_1.tank.TankFrame;
+import com.yaoshuai.tank.tank17_1.tank.*;
 
 import java.io.*;
 import java.util.UUID;
 
-public class TankStartMovingMsg extends Msg{
-    UUID id;
-    int x,y;
-    Dir dir;
+public class BulletNewMsg extends Msg{
 
-    public TankStartMovingMsg(UUID id, int x, int y, Dir dir) {
+    public UUID playerID;
+    public UUID id;
+    public Dir dir;
+    public int x;
+    public int y;
+    public Group group;
+
+    public BulletNewMsg(){}
+
+    public BulletNewMsg(UUID playerID, UUID id, Dir dir, int x, int y, Group group) {
+        this.playerID = playerID;
         this.id = id;
+        this.dir = dir;
         this.x = x;
         this.y = y;
-        this.dir = dir;
-    }
-    public TankStartMovingMsg(){}
-
-    public TankStartMovingMsg(Tank tank){
-        this.id = tank.getId();
-        this.x = tank.getX();
-        this.y = tank.getY();
-        this.dir = tank.getDir();
+        this.group = group;
     }
 
+    public BulletNewMsg(Bullet bullet){
+        this.playerID = bullet.getPlayerID();
+        this.id = bullet.getId();
+        this.x = bullet.getX();
+        this.y = bullet.getY();
+        this.dir = bullet.getDir();
+        this.group = bullet.getGroup();
+    }
 
     @Override
     public void handle() {
-        if(this.id.equals(TankFrame.INSTANCE.getMainTank().getId()))
-            return;
-        Tank tank = TankFrame.INSTANCE.findTankByUUID(this.id);
+        ServerFrame.INSTANCE.updateServerMsg(toString());
+        if (this.playerID.equals(TankFrame.INSTANCE.getMainTank().getId())) return;
 
-        if(tank != null){
-            tank.setMoving(true);
-            tank.setDir(this.dir);
-            tank.setX(this.x);
-            tank.setY(this.y);
-        }
+        Bullet bullet = new Bullet(this.playerID, x, y, dir, group, TankFrame.INSTANCE);
+        bullet.setId(this.id);
+//        Bullet bullet = new Bullet(this);
+        TankFrame.INSTANCE.addBullet(bullet);
+
+
     }
 
     @Override
     public byte[] toBytes() {
-
         DataOutputStream dos = null;
         ByteArrayOutputStream byteArrayOutputStream = null;
         byte[] bytes = null;
         try{
             byteArrayOutputStream = new ByteArrayOutputStream();
             dos = new DataOutputStream(byteArrayOutputStream);
+            dos.writeLong(playerID.getMostSignificantBits());
+            dos.writeLong(playerID.getLeastSignificantBits());
             dos.writeLong(id.getMostSignificantBits());
             dos.writeLong(id.getLeastSignificantBits());
             dos.writeInt(x);
             dos.writeInt(y);
             dos.writeInt(dir.ordinal());
+            dos.writeInt(group.ordinal());
             dos.flush();
             bytes = byteArrayOutputStream.toByteArray();
         } catch (IOException e) {
@@ -79,14 +85,22 @@ public class TankStartMovingMsg extends Msg{
         }
         return  bytes;
     }
+
+    @Override
+    public MsgType getMsgType() {
+        return MsgType.BulletNew;
+    }
+
     @Override
     public void parse(byte[] bytes) {
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(bytes));
         try{
+            this.playerID = new UUID(dis.readLong(),dis.readLong());
             this.id = new UUID(dis.readLong(),dis.readLong());
             this.x = dis.readInt();
             this.y = dis.readInt();
             this.dir = Dir.values()[dis.readInt()];
+            this.group = Group.values()[dis.readInt()];
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -100,17 +114,14 @@ public class TankStartMovingMsg extends Msg{
     }
 
     @Override
-    public MsgType getMsgType() {
-        return MsgType.TankStartMoving;
-    }
-
-    @Override
     public String toString() {
-        return "TankStartMovingMsg{" +
-                "坦克id=" + id +
+        return "BulletNewMsg{" +
+                "坦克ID=" + playerID +
+                "|| 子弹id=" + id +
+                "|| dir=" + dir +
                 "|| x=" + x +
                 "|| y=" + y +
-                "|| dir=" + dir +
+                "|| group=" + group +
                 '}';
     }
 }
