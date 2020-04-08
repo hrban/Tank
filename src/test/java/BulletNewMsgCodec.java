@@ -1,79 +1,80 @@
-import com.yaoshuai.tank.tank17_1.net.MsgType;
-import com.yaoshuai.tank.tank17_1.net.TankJoinMsg;
+import com.yaoshuai.tank.tank17_1.net.BulletNewMsg;
 import com.yaoshuai.tank.tank17_1.net.MsgDecoder;
 import com.yaoshuai.tank.tank17_1.net.MsgEncoder;
+import com.yaoshuai.tank.tank17_1.net.MsgType;
 import com.yaoshuai.tank.tank17_1.tank.Dir;
 import com.yaoshuai.tank.tank17_1.tank.Group;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.embedded.EmbeddedChannel;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.UUID;
 
-public class TankJoinMsgCodec {
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+
+public class BulletNewMsgCodec {
     @Test
     public void testEncoder(){
         EmbeddedChannel ch = new EmbeddedChannel();
+        UUID playerID = UUID.randomUUID();
         UUID id = UUID.randomUUID();
-        TankJoinMsg msg = new TankJoinMsg(5,10, Dir.DOWN,true, Group.GOOD,id);
-        ch.pipeline()
-                .addLast(new MsgEncoder());
+        BulletNewMsg msg = new BulletNewMsg(playerID,id, Dir.DOWN,5,10, Group.GOOD);
+        ch.pipeline().addLast(new MsgEncoder());
 
         ch.writeOutbound(msg);
 
-        ByteBuf buf = (ByteBuf)ch.readOutbound();
+        ByteBuf buf = ch.readOutbound();
 
         MsgType msgType = MsgType.values()[buf.readInt()];
-        assertEquals(MsgType.TankJoin,msgType);
+        assertEquals(MsgType.BulletNew,msgType);
 
         int length = buf.readInt();
-        assertEquals(33,length);
+        assertEquals(48,length);
 
+        UUID playerUUID = new UUID(buf.readLong(),buf.readLong());
+        UUID uuid = new UUID(buf.readLong(),buf.readLong());
         int x = buf.readInt();
         int y = buf.readInt();
         Dir dir = Dir.values()[buf.readInt()];
-        boolean moving = buf.readBoolean();
         Group group = Group.values()[buf.readInt()];
-        UUID uuid = new UUID(buf.readLong(),buf.readLong());
 
+        assertEquals(playerID,playerUUID);
+        assertEquals(id,uuid);
         assertEquals(5,x);
         assertEquals(10,y);
         assertEquals(Dir.DOWN,dir);
-        assertEquals(true,moving);
         assertEquals(Group.GOOD,group);
-        assertEquals(id,uuid);
 
     }
     @Test
-    void testDecoder(){
+    public void testDecoder(){
         EmbeddedChannel ch = new EmbeddedChannel();
 
+        UUID playerID = UUID.randomUUID();
         UUID id = UUID.randomUUID();
-        TankJoinMsg msg = new TankJoinMsg(5,10, Dir.DOWN,true, Group.GOOD,id);
-        ch.pipeline()
-                .addLast(new MsgDecoder());
+        BulletNewMsg msg = new BulletNewMsg(playerID,id,Dir.DOWN,5,10,Group.GOOD);
+
+        ch.pipeline().addLast(new MsgDecoder());
 
         ByteBuf buf = Unpooled.buffer();
 
-        buf.writeInt(MsgType.TankJoin.ordinal());
+        buf.writeInt(MsgType.BulletNew.ordinal());
         byte[] bytes = msg.toBytes();
         buf.writeInt(bytes.length);
-
-        buf.writeBytes(msg.toBytes());
+        buf.writeBytes(bytes);
 
         ch.writeInbound(buf.duplicate());
+        BulletNewMsg msg1 = ch.readInbound();
 
-        TankJoinMsg msg1 = (TankJoinMsg)ch.readInbound();
-
+        assertEquals(playerID,msg1.playerID);
+        assertEquals(id,msg1.id);
         assertEquals(5,msg1.x);
         assertEquals(10,msg1.y);
         assertEquals(Dir.DOWN,msg1.dir);
-        assertEquals(true,msg1.moving);
         assertEquals(Group.GOOD,msg1.group);
-        assertEquals(id,msg1.id);
+
 
     }
 }
